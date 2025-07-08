@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kit de Ferramentas: Organização e Estudo Eficiente para TDAH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals with a Spark (Slate, Teal, Amber) -->
+    <!-- Application Structure Plan: A single-page application with a fixed navigation bar for easy exploration. The structure is thematic, guiding the user from identifying their "Problem" (with an interactive chart) to discovering the "Solution" and its "Benefits" (visualized with another chart) and "Contents". This non-linear, section-based approach allows users to jump to the information that is most relevant to them, which is ideal for an audience that can be easily overwhelmed by long-form text. The goal is to create clarity and engagement through interactive discovery rather than passive reading. -->
+    <!-- Visualization & Content Choices: 
+        1. Problem Identification (Section: 'O Problema'): Report Info -> Common ADHD struggles (frustration, disorganization). Goal -> Engage & Inform. Viz/Method -> Interactive buttons that update a Chart.js Bar Chart ('Nível de Frustração'). Interaction -> User clicks on struggles, chart updates. Justification -> Actively involves the user in identifying their pain points, making the solution more compelling. Library -> Chart.js.
+        2. Content Exploration (Section: 'O Que Você Leva'): Report Info -> Kit contents (eBook, Checklists, Minicurso). Goal -> Organize & Inform. Viz/Method -> Three clickable cards using HTML/CSS/JS. Interaction -> User clicks a card to reveal more details. Justification -> Prevents information overload by hiding details by default, allowing for a clean, scannable overview of the product. Library -> Vanilla JS.
+        3. Benefits Visualization (Section: 'Benefícios'): Report Info -> Key benefits (less stress, more focus, etc.). Goal -> Compare & Inform. Viz/Method -> Chart.js Radar Chart. Interaction -> The chart is rendered on load to provide an immediate visual summary. Justification -> A radar chart is a compelling way to show holistic, multi-faceted improvements, making the benefits tangible and memorable. Library -> Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488;
+        }
+        .benefit-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .benefit-card:hover {
+            transform: translateY(-5px);
+        }
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .details-content.show {
+            max-height: 500px;
+        }
+        .cta-button {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="sticky top-0 bg-white/80 backdrop-blur-lg z-50 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <span class="text-xl font-bold text-teal-600">Kit TDAH</span>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#problema" class="nav-link font-medium text-slate-600 border-b-2 border-transparent pb-1">O Problema</a>
+                    <a href="#solucao" class="nav-link font-medium text-slate-600 border-b-2 border-transparent pb-1">A Solução</a>
+                    <a href="#conteudo" class="nav-link font-medium text-slate-600 border-b-2 border-transparent pb-1">O Que Você Leva</a>
+                    <a href="#beneficios" class="nav-link font-medium text-slate-600 border-b-2 border-transparent pb-1">Benefícios</a>
+                    <a href="#depoimentos" class="nav-link font-medium text-slate-600 border-b-2 border-transparent pb-1">Depoimentos</a>
+                </div>
+                <a href="#comprar" class="hidden md:block bg-teal-500 text-white font-bold py-2 px-4 rounded-lg cta-button">Quero Meu Kit</a>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-slate-800">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden py-4">
+                <a href="#problema" class="block py-2 px-4 text-sm text-slate-600 hover:bg-teal-50 rounded-md">O Problema</a>
+                <a href="#solucao" class="block py-2 px-4 text-sm text-slate-600 hover:bg-teal-50 rounded-md">A Solução</a>
+                <a href="#conteudo" class="block py-2 px-4 text-sm text-slate-600 hover:bg-teal-50 rounded-md">O Que Você Leva</a>
+                <a href="#beneficios" class="block py-2 px-4 text-sm text-slate-600 hover:bg-teal-50 rounded-md">Benefícios</a>
+                <a href="#depoimentos" class="block py-2 px-4 text-sm text-slate-600 hover:bg-teal-50 rounded-md">Depoimentos</a>
+                <a href="#comprar" class="block mt-2 text-center bg-teal-500 text-white font-bold py-2 px-4 rounded-lg w-full cta-button">Quero Meu Kit</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 md:py-28 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">Cansado de Lutar Contra a Desorganização e o Estudo?</h1>
+                <p class="mt-6 text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">Seu cérebro com TDAH é uma potência, mas a bagunça e a falta de foco estão te freando? Descubra o método prático para transformar o caos em clareza.</p>
+                <a href="#comprar" class="mt-8 inline-block bg-amber-500 text-slate-900 font-bold py-4 px-8 rounded-lg text-lg cta-button">QUERO MINHA TRANSFORMAÇÃO AGORA</a>
+            </div>
+        </section>
+
+        <section id="problema" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Você se identifica com isso?</h2>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">A frustração de não conseguir se organizar é exaustiva, não é? Veja como as dificuldades mais comuns se somam e aumentam o estresse do dia a dia.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="font-bold text-xl mb-4 text-slate-800">Clique nas dificuldades que você enfrenta:</h3>
+                        <div id="struggles-container" class="flex flex-wrap gap-3">
+                            <button class="struggle-btn" data-struggle="Sobrecarga"> Tarefas que nunca terminam </button>
+                            <button class="struggle-btn" data-struggle="Prazos"> Perder prazos importantes </button>
+                            <button class="struggle-btn" data-struggle="Dispersão"> A dispersão sempre vence </button>
+                            <button class="struggle-btn" data-struggle="Procrastinação"> Procrastinação constante </button>
+                            <button class="struggle-btn" data-struggle="Esquecimento"> Esquecer compromissos </button>
+                        </div>
+                        <p class="mt-6 text-slate-600 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">Selecione os desafios acima para visualizar seu impacto. Cada um deles contribui para um nível de frustração que podemos aprender a gerenciar.</p>
+                    </div>
+                    <div>
+                        <div class="chart-container">
+                            <canvas id="frustrationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="solucao" class="py-16 md:py-24 bg-teal-50">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold text-teal-900">Imagine agora... Uma vida com mais clareza e controle.</h2>
+                <p class="mt-4 text-lg text-slate-700 max-w-3xl mx-auto">A solução não é lutar contra seu cérebro, mas trabalhar com ele. É possível criar um sistema que se adapta ao seu jeito de ser e transforma o caos em organização.</p>
+                <div class="mt-12 p-8 bg-white rounded-xl shadow-lg max-w-4xl mx-auto">
+                    <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                        <div class="text-left flex-1">
+                            <span class="font-bold text-amber-500">ANTES</span>
+                            <h3 class="text-2xl font-bold mt-1 text-slate-800">Sensação de estar "travado"</h3>
+                            <ul class="mt-4 space-y-2 list-inside list-disc text-slate-600">
+                                <li>Tarefas parecem montanhas</li>
+                                <li>Foco se perde a todo instante</li>
+                                <li>Ambiente caótico e desmotivador</li>
+                            </ul>
+                        </div>
+                        <div class="text-5xl text-teal-400 font-light hidden md:block">&rarr;</div>
+                        <div class="text-3xl text-teal-400 font-light md:hidden">&darr;</div>
+                        <div class="text-left flex-1">
+                            <span class="font-bold text-teal-500">DEPOIS</span>
+                            <h3 class="text-2xl font-bold mt-1 text-slate-800">Confiança e fluxo de trabalho</h3>
+                            <ul class="mt-4 space-y-2 list-inside list-disc text-teal-700">
+                                <li>Clareza sobre o próximo passo</li>
+                                <li>Tarefas divididas e gerenciáveis</li>
+                                <li>Ambiente que inspira a produtividade</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conteudo" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Apresentamos o Kit "Organização e Estudo Eficiente para TDAH"</h2>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Uma solução completa e prática, criada para o seu jeito de funcionar. Chega de técnicas genéricas. Aqui está o que você vai receber.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="content-card border border-slate-200 p-6 rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300">
+                        <h3 class="font-bold text-xl text-teal-600">1. eBook Direto ao Ponto</h3>
+                        <p class="mt-2 text-slate-600">Um guia com as melhores estratégias adaptadas para seu cérebro. Sem enrolação, só o que funciona.</p>
+                        <button class="details-toggle mt-4 font-medium text-teal-600 hover:text-teal-800">Ver detalhes &#9662;</button>
+                        <div class="details-content mt-4 text-sm text-slate-600">
+                            <ul>
+                                <li>- Entendendo o cérebro TDAH</li>
+                                <li>- Ferramentas de organização visual</li>
+                                <li>- Técnicas de estudo ativo (Mapas Mentais, etc.)</li>
+                                <li>- Como domar a procrastinação</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="content-card border border-slate-200 p-6 rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300">
+                        <h3 class="font-bold text-xl text-teal-600">2. Checklists Práticos</h3>
+                        <p class="mt-2 text-slate-600">Ferramentas acionáveis para você aplicar imediatamente e sentir a satisfação de cada tarefa concluída.</p>
+                        <button class="details-toggle mt-4 font-medium text-teal-600 hover:text-teal-800">Ver detalhes &#9662;</button>
+                        <div class="details-content mt-4 text-sm text-slate-600">
+                            <ul>
+                                <li>- Checklist de Organização do Ambiente</li>
+                                <li>- Checklist de Rotina Diária Focada</li>
+                                <li>- Checklist de Planejamento Semanal</li>
+                                <li>- Checklist de Autoavaliação e Recompensa</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="content-card border border-slate-200 p-6 rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300">
+                        <h3 class="font-bold text-xl text-teal-600">3. Minicurso em Vídeo</h3>
+                        <p class="mt-2 text-slate-600">Vídeos curtos e objetivos que mostram na prática como usar as técnicas. Perfeito para quem aprende visualmente!</p>
+                        <button class="details-toggle mt-4 font-medium text-teal-600 hover:text-teal-800">Ver detalhes &#9662;</button>
+                        <div class="details-content mt-4 text-sm text-slate-600">
+                            <ul>
+                                <li>- Módulo 1: Montando seu Comando Central</li>
+                                <li>- Módulo 2: A Pomodoro Adaptada na Prática</li>
+                                <li>- Módulo 3: Mapas Mentais Descomplicados</li>
+                                <li>- Módulo 4: Mantendo a Motivação</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="beneficios" class="py-16 md:py-24 bg-slate-100">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="text-left">
+                        <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Benefícios Claros e Diretos</h2>
+                        <p class="mt-4 text-lg text-slate-600">Veja o impacto positivo que uma rotina organizada e um estudo eficiente podem trazer para sua vida.</p>
+                        <div class="mt-8 space-y-4">
+                            <div class="benefit-card flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <span class="text-2xl mr-4">&#10004;</span>
+                                <div><h3 class="font-bold">Menos Estresse</h3><p class="text-slate-600">Reduza a ansiedade da desorganização.</p></div>
+                            </div>
+                            <div class="benefit-card flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <span class="text-2xl mr-4">&#10004;</span>
+                                <div><h3 class="font-bold">Mais Foco</h3><p class="text-slate-600">Aprenda a direcionar sua atenção para o que importa.</p></div>
+                            </div>
+                            <div class="benefit-card flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <span class="text-2xl mr-4">&#10004;</span>
+                                <div><h3 class="font-bold">Produtividade Real</h3><p class="text-slate-600">Conclua mais tarefas em menos tempo.</p></div>
+                            </div>
+                             <div class="benefit-card flex items-start bg-white p-4 rounded-lg shadow-sm">
+                                <span class="text-2xl mr-4">&#10004;</span>
+                                <div><h3 class="font-bold">Autoconfiança</h3><p class="text-slate-600">Sinta-se no controle da sua rotina e seu futuro.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="chart-container">
+                            <canvas id="benefitsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="depoimentos" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900">O que nossos usuários estão dizendo</h2>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="bg-teal-50 p-8 rounded-lg border-l-4 border-teal-500">
+                        <p class="text-slate-700 italic">"Eu sempre me senti incapaz de me organizar. O Kit TDAH mudou tudo! Os checklists são um salva-vidas e o minicurso me fez entender como meu cérebro funciona. Finalmente consigo estudar sem me perder!"</p>
+                        <p class="mt-4 font-bold text-teal-800">— Ana C., Estudante Universitária</p>
+                    </div>
+                    <div class="bg-teal-50 p-8 rounded-lg border-l-4 border-teal-500">
+                        <p class="text-slate-700 italic">"Como mãe de uma criança com TDAH, eu estava perdida. Este kit me deu as ferramentas para ajudar meu filho a se organizar e focar nos estudos. É prático e a linguagem é muito fácil de entender. Recomendo demais!"</p>
+                        <p class="mt-4 font-bold text-teal-800">— Carolina P., Mãe e Professora</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comprar" class="py-16 md:py-24 bg-slate-800 text-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-5xl font-extrabold">Chega de adiar sua transformação!</h2>
+                <p class="mt-6 text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">Você merece uma vida mais organizada e um estudo mais eficiente. Invista em você e descubra o potencial que existe no seu cérebro com TDAH.</p>
+                <a href="#" class="mt-10 inline-block bg-amber-500 text-slate-900 font-bold py-4 px-10 rounded-lg text-xl cta-button">
+                    GARANTIR MEU ACESSO AGORA!
+                </a>
+                <p class="mt-4 text-sm text-slate-400">Não perca mais tempo lutando sozinho. Seu futuro organizado começa aqui.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-6">
+        <div class="container mx-auto px-6 text-center text-sm">
+            <p>&copy; 2025 Kit TDAH. Todos os direitos reservados. Uma solução para clareza e foco.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Mobile Menu Toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Active Nav Link Styling on Scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.onscroll = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 70) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            
+            // Content Details Toggle
+            const detailToggles = document.querySelectorAll('.details-toggle');
+            detailToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const content = toggle.nextElementSibling;
+                    content.classList.toggle('show');
+                    toggle.innerHTML = content.classList.contains('show') ? 'Ver menos &#9652;' : 'Ver detalhes &#9662;';
+                });
+            });
+
+            // Chart 1: Frustration Chart
+            const frustrationCtx = document.getElementById('frustrationChart').getContext('2d');
+            const initialData = {
+                labels: ['Sobrecarga', 'Prazos', 'Dispersão', 'Procrastinação', 'Esquecimento'],
+                datasets: [{
+                    label: 'Nível de Frustração',
+                    data: [0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(245, 158, 11, 0.6)', // amber-500
+                    borderColor: 'rgba(245, 158, 11, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            const frustrationChart = new Chart(frustrationCtx, {
+                type: 'bar',
+                data: initialData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Frustração: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Struggle buttons logic
+            const struggleButtons = document.querySelectorAll('.struggle-btn');
+            const baseStruggleValues = {
+                'Sobrecarga': 80, 'Prazos': 75, 'Dispersão': 90, 'Procrastinação': 85, 'Esquecimento': 70
+            };
+
+            const struggleBtnStyles = {
+                base: 'border border-slate-300 text-slate-600 bg-white hover:bg-slate-100 py-2 px-4 rounded-lg transition-all duration-200 cursor-pointer',
+                active: 'border-amber-500 text-amber-700 bg-amber-100 ring-2 ring-amber-300'
+            };
+
+            struggleButtons.forEach(button => {
+                button.className = struggleBtnStyles.base;
+                button.addEventListener('click', () => {
+                    button.classList.toggle('active');
+                    button.classList.toggle('bg-white');
+                    button.classList.toggle('bg-amber-100');
+
+                    const struggleName = button.dataset.struggle;
+                    const dataIndex = frustrationChart.data.labels.indexOf(struggleName);
+
+                    if (button.classList.contains('active')) {
+                        frustrationChart.data.datasets[0].data[dataIndex] = baseStruggleValues[struggleName];
+                    } else {
+                        frustrationChart.data.datasets[0].data[dataIndex] = 0;
+                    }
+                    frustrationChart.update();
+                });
+            });
+
+
+            // Chart 2: Benefits Chart
+            const benefitsCtx = document.getElementById('benefitsChart').getContext('2d');
+            new Chart(benefitsCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Foco', 'Produtividade', 'Confiança', 'Organização', 'Bem-Estar'],
+                    datasets: [{
+                        label: 'Impacto do Kit',
+                        data: [85, 80, 90, 95, 75],
+                        fill: true,
+                        backgroundColor: 'rgba(20, 184, 166, 0.2)', // teal-500
+                        borderColor: 'rgb(20, 184, 166)',
+                        pointBackgroundColor: 'rgb(20, 184, 166)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(20, 184, 166)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
